@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -24,6 +26,9 @@ namespace dotnet_philly
 		[Argument(0, Description = "Name of the sample project to fetch")]
 		public string Name { get; }
 
+		[Argument(1, Description ="Folder to write the sample to.  If not specified, then the name of the sample as a child of the current directory")]
+		public string OutputFolder { get; }
+
 		//[Option(Description = "An optional parameter, with a default value.\nThe number of times to say hello.")]
 		//[Range(1, 1000)]
 		//public int Count { get; } = 1;
@@ -34,15 +39,54 @@ namespace dotnet_philly
 			using (var client = new HttpClient())
 			{
 
+				client.BaseAddress = Registry;
+
 				if (string.IsNullOrEmpty(Name))
 				{
 					await OutputAvailableSamples(client);
 					return 0;
+				} else
+				{
+					await DownloadProject(Name, client);
+					return 0;
 				}
+
+
+
+
 
 			}
 
 			return 0;
+		}
+
+		private async Task DownloadProject(string name, HttpClient client)
+		{
+
+			var sampleData = await client.GetStringAsync("Samples/" + name);
+			var sample = JsonConvert.DeserializeObject<Sample>(sampleData);
+
+			var destinationFolder = CreateOutputFolder(sample);
+
+			var zipFile = await client.GetStreamAsync(sample.Url);
+			using (var zipArchive = new ZipArchive(zipFile))
+			{
+				zipArchive.ExtractToDirectory(destinationFolder);
+			}
+
+		}
+
+		private string CreateOutputFolder(Sample sample)
+		{
+
+			var destinationFolder = string.IsNullOrEmpty(OutputFolder) ? sample.Name : OutputFolder;
+			if (!Directory.Exists(destinationFolder))
+			{
+				// Need to handle errors here 
+				Directory.CreateDirectory(destinationFolder);
+			}
+
+			return destinationFolder;
 		}
 
 		private async Task OutputAvailableSamples(HttpClient client)
@@ -52,7 +96,7 @@ namespace dotnet_philly
 			Console.WriteLine("---------------------------------------------");
 			Console.WriteLine("");
 
-			var samplesList = await client.GetStringAsync(Registry.ToString());
+			var samplesList = await client.GetStringAsync("");
 			var samplesArray = JsonConvert.DeserializeObject<Sample[]>(samplesList);
 
 			Console.WriteLine("Sample Name");
@@ -71,6 +115,8 @@ namespace dotnet_philly
 			Console.WriteLine($"Total samples found: {samplesArray.Length}");
 
 		}
+
+
 
 	}
 }

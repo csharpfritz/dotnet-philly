@@ -11,30 +11,34 @@ namespace DotNetSamples.Web.Controllers
 	[ApiController]
 	public class SamplesController : ControllerBase
 	{
+
+		public SamplesController(IRepository repo)
+		{
+			this.Repository = repo;
+		}
+
+		public IRepository Repository { get; }
+
 		// GET api/values
 		[HttpGet]
 		public ActionResult<IEnumerable<Sample>> Get()
 		{
-			return new Sample[] {
+			return Ok(Repository.GetSamples());
+		}
 
-				new Sample
-				{
-					Url="https://dot.net/MusicStore.zip",
-					Command="musicstore",
-					Name="Music Store MVC",
-					Description="The Music Store MVC Sample",
-					FrameworkVersion="aspnetcore21"
-				},
-				new Sample
-				{
-					Url="https://dot.net/NerdDinner.zip",
-					Command="nerddinner",
-					Name="NerdDinner MVC",
-					Description="The infamous NerdDinner application... its like Meetup except for Nerds and Tacos",
-					FrameworkVersion="aspnetcore20"
-				}
+		[HttpGet("{command}")]
+		public ActionResult<Sample>Get(string command)
+		{
 
-			};
+			var sample = Repository.Get(command);
+
+			if (sample == null)
+			{
+				return NotFound();
+			}
+
+			return Ok(sample);
+
 		}
 
 	}
