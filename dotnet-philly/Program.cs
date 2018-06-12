@@ -111,12 +111,13 @@ namespace dotnet_philly
             
 			var samplesArray = JsonConvert.DeserializeObject<Sample[]>(samplesList);
 
-			Console.WriteLine("Sample Name");
-			Console.WriteLine("-----------------------\n");
+			var lineFormat = "{0,-20}  {1,-10}  {2,-50}";
+			Console.WriteLine(lineFormat, "Sample Name", "Command", "Description");
+			Console.WriteLine(new String('-',84) + "\n");
 
 			foreach (var s in samplesArray)
 			{
-				Console.WriteLine(s.Name);
+				Console.WriteLine(lineFormat, s.Name, s.Command, s.Description.Substring(0,s.Description.Length > 50 ? 49 : s.Description.Length-1));
 			}
 
 			Console.WriteLine($"\nTotal samples found: {samplesArray.Length}");
