@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using DotNetSamples.Core;
 
@@ -15,8 +16,18 @@ namespace dotnet_philly
 		// TODO: Need to be able to configure registry in the future
 		internal static readonly Uri Registry = new Uri("https://localhost:5001/Samples");
 
+        private readonly ILogger _logger;
+
 
 		public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
+
+        public Program()
+        {
+            _logger = new LoggerFactory()
+                    .AddConsole(LogLevel.Information)
+                    .AddDebug(LogLevel.Debug)
+                    .CreateLogger<Program>();
+        }
 
 		[Argument(0, Description = "Name of the sample project to fetch")]
 		public string Name { get; }
@@ -34,10 +45,12 @@ namespace dotnet_philly
 			{
 				if (string.IsNullOrEmpty(Name))
 				{
+                    _logger.LogInformation($"Retrieving samples from '{Registry}'");
 					await OutputAvailableSamples(client);
 				} 
 				else
 				{
+                    _logger.LogInformation($"Downloading sample '{Name}' from '{Registry}'");
 					await DownloadProject(Name, client);
 				}
 
@@ -47,7 +60,19 @@ namespace dotnet_philly
 
 		private async Task DownloadProject(string name, HttpClient client)
 		{
-			var sampleData = await client.GetStringAsync("Samples/" + name);
+
+            var sampleData = string.Empty;
+
+            try
+            {
+                sampleData = await client.GetStringAsync("Samples/" + name);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError($"Could not download sample '{Name}'. {ex.Message}");
+                return;
+            }
+
 			var sample = JsonConvert.DeserializeObject<Sample>(sampleData);
 			var destinationFolder = OutputFolder ?? sample.Name;
 
@@ -67,11 +92,23 @@ namespace dotnet_philly
 
 		private async Task OutputAvailableSamples(HttpClient client)
 		{
+            var samplesList = string.Empty;
+            try
+            {
+                samplesList = await client.GetStringAsync("");
+            }
+            catch (HttpRequestException ex)
+            {
+                var color = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Could not retrieve samples from {Registry}.\n\r{ex.Message}");
+                Console.ForegroundColor = color;
+                return;
+            }
 
-			Console.WriteLine($"The available samples from {Registry}");
+            Console.WriteLine($"The available samples from {Registry}");
 			Console.WriteLine("---------------------------------------------\n");
-
-			var samplesList = await client.GetStringAsync("");
+            
 			var samplesArray = JsonConvert.DeserializeObject<Sample[]>(samplesList);
 
 			Console.WriteLine("Sample Name");
