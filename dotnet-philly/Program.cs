@@ -10,13 +10,14 @@ using DotNetSamples.Core;
 using Microsoft.Extensions.DependencyInjection;
 using dotnet_philly.Startup;
 using Microsoft.Extensions.Configuration;
+using dotnet_philly.Attributes;
 
 namespace dotnet_philly
 {
 	[Command(Description = "Download and extract sample code from Microsoft's Sample Repository")]
 	class Program
 	{
-		internal readonly Uri Registry = Configuration.GetValue<Uri>("RegistryUri");
+		internal Uri Registry = Configuration.GetValue<Uri>("RegistryUri");
 
         private readonly ILogger _logger;
 
@@ -59,14 +60,24 @@ namespace dotnet_philly
 		[Argument(0, Description = "Name of the sample project to fetch")]
 		public string Name { get; }
 
-		[Argument(1, Description ="Folder to write the sample to.  If not specified, then the name of the sample as a child of the current directory")]
+		[Option(Template = "-o|--output <path>", Description = "Location to place the Sample output. If no output is specified, the current directory is used.")]
 		public string OutputFolder { get; }
+
+        [IsValidUrl]
+        [Option(Template = "-s|--sample-source <url>", Description = "Specifies a custom Samples catalog to use.")]
+        public string SampleSource { get; }
 
 		[Option(Description="Show details of the sample.")]
 		public bool Details { get; }
 
 		private async Task<int> OnExecute()
 		{
+            // Override samples catalog from command-line entry.
+            if (!string.IsNullOrWhiteSpace(SampleSource))
+            {
+                Uri.TryCreate(SampleSource, UriKind.Absolute, out Registry);
+            }
+
 			using (var client = new HttpClient{ BaseAddress = Registry })
 			{
 				if (Details)
