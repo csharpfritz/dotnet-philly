@@ -7,25 +7,53 @@ using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using DotNetSamples.Core;
+using Microsoft.Extensions.DependencyInjection;
+using dotnet_philly.Startup;
+using Microsoft.Extensions.Configuration;
 
 namespace dotnet_philly
 {
 	[Command(Description = "Download and extract sample code from Microsoft's Sample Repository")]
 	class Program
 	{
-		// TODO: Need to be able to configure registry in the future
-		internal static readonly Uri Registry = new Uri("https://localhost:5001/Samples");
+		internal readonly Uri Registry = Configuration.GetValue<Uri>("RegistryUri");
 
         private readonly ILogger _logger;
 
-		public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
-
-        public Program()
+        public static int Main(string[] args)
         {
-            _logger = new LoggerFactory()
-                    .AddConsole(LogLevel.Information)
-                    .AddDebug(LogLevel.Debug)
-                    .CreateLogger<Program>();
+            Configuration = ConfigureConfiguration.Execute();
+
+            var services = ConfigureServices.Execute(new ServiceCollection(), Configuration);
+
+            var app = new CommandLineApplication<Program>();
+            app.Conventions
+                .UseDefaultConventions()
+                .UseConstructorInjection(services);
+
+            return app.Execute(args);
+        }
+
+        public static IConfiguration Configuration { get; private set; }
+
+        public Program(ILogger<Program> logger)
+        {
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Pause the Console when attached to a debugger.
+        /// This will allow us to examine the Console output prior to the window closing.
+        /// </summary>
+        /// <param name="msg"></param>
+        private void PauseDebugger(string msg = "Press any key to continue...")
+        {
+            if (!System.Diagnostics.Debugger.IsAttached)
+                return;
+
+            Console.WriteLine("\n\n\n");
+            Console.Write(msg);
+            Console.ReadKey();
         }
 
 		[Argument(0, Description = "Name of the sample project to fetch")]
@@ -56,10 +84,13 @@ namespace dotnet_philly
                     _logger.LogInformation($"Downloading sample '{Name}' from '{Registry}'");
 					await DownloadProject(Name, client);
 				}
-
-				return 0;
 			}
-		}
+
+            // Wait before exiting if attached to a debugger.
+            PauseDebugger();
+
+            return 0;
+        }
 
 		private async Task DownloadProject(string name, HttpClient client)
 		{
