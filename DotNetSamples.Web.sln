@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetSamples.Web", "DotNet
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnet-philly", "dotnet-philly\dotnet-philly.csproj", "{4F6FAC34-946B-43B6-94E6-3517E71EDBFA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetSamples.Core", "DotNetSamples.Core\DotNetSamples.Core.csproj", "{15124513-4BFC-4E67-A10B-426A013AE091}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetSamples.Core", "DotNetSamples.Core\DotNetSamples.Core.csproj", "{15124513-4BFC-4E67-A10B-426A013AE091}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetSamples.Web.Test", "DotNetSamples.Web.Test\DotNetSamples.Web.Test.csproj", "{FD2A7A31-951B-469D-A371-ECD0BB10A89E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{15124513-4BFC-4E67-A10B-426A013AE091}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15124513-4BFC-4E67-A10B-426A013AE091}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15124513-4BFC-4E67-A10B-426A013AE091}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD2A7A31-951B-469D-A371-ECD0BB10A89E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD2A7A31-951B-469D-A371-ECD0BB10A89E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD2A7A31-951B-469D-A371-ECD0BB10A89E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD2A7A31-951B-469D-A371-ECD0BB10A89E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
