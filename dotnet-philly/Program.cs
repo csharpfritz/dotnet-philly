@@ -65,18 +65,21 @@ namespace dotnet_philly
 
 		[IsValidUrl]
 		[Option(Template = "-s|--sample-source <url>", Description = "Specifies a custom Samples catalog to use.")]
-		public string SampleSource { get; }
+		public string SampleSource { 
+			get
+			{
+				return Registry.ToString();
+			}
+			set {
+				Registry = new Uri(value);
+			}
+		}
 
 		[Option(Description = "Show details of the sample.")]
 		public bool Details { get; }
 
 		private async Task<int> OnExecute()
 		{
-			// Override samples catalog from command-line entry.
-			if (!string.IsNullOrWhiteSpace(SampleSource))
-			{
-				Uri.TryCreate(SampleSource, UriKind.Absolute, out Registry);
-			}
 
 			using (var client = new HttpClient { BaseAddress = Registry })
 			{
